@@ -29,7 +29,7 @@ export const apiClient = async <T>(endpoint: string, options?: RequestInit): Pro
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
-    throw new Error(errorData?.title || errorData?.detail || `Error HTTP: ${response.status}`);
+    throw new Error(errorData?.error || errorData?.title || errorData?.detail || `Error HTTP: ${response.status}`);
   }
 
   // Si la respuesta es un 204 No Content, no intentamos parsear JSON
