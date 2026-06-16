@@ -14,10 +14,13 @@ import { useSecurityControls } from '../hooks/useSecurityControls';
 export const DashboardPage = () => {
   const [activeView, setActiveView] = useState('monitor');
 
-  const { devices, topTalkerDeviceId, isLoading, error } = useTrafficMonitor(3000, 100);
+  const { devices, topTalkerDeviceId, autoDisabledDevices, isLoading, error } = useTrafficMonitor(3000, 100);
   const { blockedDevices, blockedSensors, processingIds, toggleDeviceStatus, toggleSensorStatus } = useSecurityControls();
 
-  const activeAlerts = devices.filter(d => d.deviceId === topTalkerDeviceId && !blockedDevices[d.deviceId]).length;
+  // Fusionar dispositivos auto-deshabilitados con los bloqueados manualmente
+  const allBlockedDevices = { ...blockedDevices, ...Object.fromEntries(Object.keys(autoDisabledDevices).map(id => [id, true])) };
+
+  const activeAlerts = devices.filter(d => d.deviceId === topTalkerDeviceId && !allBlockedDevices[d.deviceId]).length;
 
   const renderMonitorView = () => (
     <div className="animate-in fade-in duration-500">
@@ -50,6 +53,17 @@ export const DashboardPage = () => {
         </div>
       </div>
 
+      {/* Banner de dispositivos auto-deshabilitados */}
+      {Object.entries(autoDisabledDevices).map(([deviceId, reason]) => (
+        <div key={deviceId} className="mb-4 p-4 bg-amber-50 dark:bg-amber-500/10 border-l-4 border-amber-500 rounded-r-xl flex items-start gap-4">
+          <AlertCircle className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-sm font-bold text-amber-800 dark:text-amber-300">Dispositivo bloqueado automáticamente</h3>
+            <p className="text-sm text-amber-600 dark:text-amber-400/80 mt-1">{reason}</p>
+          </div>
+        </div>
+      ))}
+
       {/* Manejo de Errores Enterprise */}
       {error && (
         <div className="mb-8 p-4 bg-rose-50 dark:bg-rose-500/10 border-l-4 border-rose-500 rounded-r-xl flex items-start gap-4">
@@ -79,7 +93,7 @@ export const DashboardPage = () => {
               key={device.deviceId}
               device={device}
               isTopTalker={device.deviceId === topTalkerDeviceId}
-              isBlocked={blockedDevices[device.deviceId] || false}
+              isBlocked={allBlockedDevices[device.deviceId] || false}
               processingIds={processingIds}
               blockedSensors={blockedSensors}
               onToggleDevice={toggleDeviceStatus}

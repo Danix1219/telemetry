@@ -1,16 +1,17 @@
-// src/api/devices.ts
 import { apiClient } from './client';
+import type { Device } from '../types';
 
 export interface ToggleResponse {
   isSuccess: boolean;
 }
 
 export const DeviceService = {
-  // PATCH: /api/devices/{id}/disable
-  disable: (id: string) => 
+  getAll: () =>
+    apiClient<{ devices: Device[] }>('/api/devices'),
+
+  disable: (id: string) =>
     apiClient<ToggleResponse>(`/api/devices/${id}/disable`, { method: 'PATCH' }),
 
-  // PATCH: /api/devices/{id}/enable
-  enable: (id: string) => 
+  enable: (id: string) =>
     apiClient<ToggleResponse>(`/api/devices/${id}/enable`, { method: 'PATCH' }),
 };
